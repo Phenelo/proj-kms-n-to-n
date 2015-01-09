@@ -1,0 +1,13 @@
+{
+  "name": "proj",
+  "version": "5.0.3",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "~3.2.6",
+    "ws": "~0.4.32",
+    "kurento-client": "^5.0.0"
+  }
+}
