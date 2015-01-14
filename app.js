@@ -189,10 +189,10 @@ function leaveRoom(data,ws) {
 	var roomName = data.room;
 	var keyName = roomName+":"+displayName;
 	
-	if(incomingMedia[keyName]) {
-		incomingMedia[keyName].release();
-		delete incomingMedia[keyName];
-	}
+//	if(incomingMedia[keyName]) {
+//		incomingMedia[keyName].release();
+//		delete incomingMedia[keyName];
+//	}
 
 
 	userRegistry.userInfo[displayName].webRtcEndpoint.release();	
@@ -217,7 +217,7 @@ function receiveVideoFrom(data,ws) {
    		// send
 		outgoingMedia.processOffer(sdpOffer, function(error, sdpAnswer) {
 
-			sdpAnswer = setBandWidth(sdpAnswer);		
+			//sdpAnswer = setBandWidth(sdpAnswer);		
 
 
 			ws.send(JSON.stringify({
@@ -230,13 +230,13 @@ function receiveVideoFrom(data,ws) {
 
    } else {
    		// received
-   		  var incoming = incomingMedia[keyName];
+//   		  var incoming = incomingMedia[keyName];
 	   	//var outgoingMedia = userRegistry.userInfo[displayName].webRtcEndpoint;
    		
-
+/*
    		if(incoming){
 				incoming.processOffer(sdpOffer, function(error, sdpAnswer) {
-					sdpAnswer = setBandWidth(sdpAnswer);
+					//sdpAnswer = setBandWidth(sdpAnswer);
 					ws.send(JSON.stringify({
 						id:"receiveVideoAnswer",
 						name: displayName,
@@ -244,11 +244,12 @@ function receiveVideoFrom(data,ws) {
 					}));
 				});   			
    		}else {
+*/
    			var pipeline = roomlist[roomName];
 			pipeline.create('WebRtcEndpoint', function(error, webRtcEndpoint) {
 
 				webRtcEndpoint.processOffer(sdpOffer, function(error, sdpAnswer) {
-					sdpAnswer = setBandWidth(sdpAnswer);
+					//sdpAnswer = setBandWidth(sdpAnswer);
 					incomingMedia[keyName] = webRtcEndpoint;
 
 					outgoingMedia.connect(webRtcEndpoint, function(error) {
@@ -265,7 +266,7 @@ function receiveVideoFrom(data,ws) {
 					});
 				});
 			});   			
-   		}
+  // 		}
  		
    }
    

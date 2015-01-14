@@ -170,9 +170,13 @@ function leaveRoom() {
 	});
 
 	for ( var key in participants) {
-		participants[key].dispose();
+		if(participants[key].rtcPeer){
+			participants[key].dispose();
+			delete participants[key];
+		}
 	}
 
+        participants = [];
 	name = '';
 	room = '';
 	document.getElementById('name').value = '';
@@ -182,7 +186,6 @@ function leaveRoom() {
 	document.getElementById('register').style.display = 'block';
 	document.getElementById('video').style.display = 'none';
 
-	ws.close();
 }
 
 function receiveVideo(sender) {
