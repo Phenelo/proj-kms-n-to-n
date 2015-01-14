@@ -133,8 +133,7 @@ var constraints = {
         {googAutoGainControl2:true}, 
         {googDucking:false}, 
         {sourceId:audioSource}, 
-        {chromeRenderToAssociatedSink:true},
-        {googCodecName:"ISAC"}      	
+        {chromeRenderToAssociatedSink:true}
       ]
     },
     video: {
@@ -142,30 +141,16 @@ var constraints = {
       	{sourceId: videoSource},
       	{googNoiseReduction: true},
       	{googLeakyBucket: true},
+      	{minWidth: 160},
       	{maxWidth: 160},
+      	{minHeight: 120},
       	{maxHeight: 120},
-      	{minFrameRate: 30},
+      	{minFrameRate: 15},
+      	{maxFrameRate: 15}
       ]
     }
   };
 
-	// var constraints = {
-	// 	audio : {
-	// 		optional : [{ 
-	// 			sourceId: audioSourceId
-	// 		}]
-			
-	// 	},
-	// 	video : {
-	// 		optional : { 
-	// 			maxWidth : 160,
-	// 			maxHeight: 120,
-	// 			googNoiseReduction: true,
-	// 			googLeakyBucket: true,
-	// 			minFrameRate: 30
-	// 		}
-	// 	}
-	// };
 	console.log(name + " registered in room " + room);
 	var participant = new Participant(name,"send",room);
 	participants[name] = participant;
