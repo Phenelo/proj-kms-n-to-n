@@ -100,9 +100,9 @@ UserRegistry.prototype.getParticipants = function(user,roomName){
     return list;
 }
 
-UserRegistry.prototype.newParticipantArrived = function(user){
+UserRegistry.prototype.newParticipantArrived = function(user,roomName){
 	for(var key in this.userInfo){
-		if(key != user){
+		if(key != user && this.userInfo[key].roomName == roomName){
 			var userSession = this.userInfo[key];
 			userSession.ws.send(JSON.stringify({
 				id: "newParticipantArrived",
@@ -230,7 +230,7 @@ function receiveVideoFrom(data,ws) {
 
    } else {
    		// received
-//   		  var incoming = incomingMedia[keyName];
+  // 		  var incoming = incomingMedia[keyName];
 	   	//var outgoingMedia = userRegistry.userInfo[displayName].webRtcEndpoint;
    		
 /*
@@ -298,10 +298,11 @@ function joinRoom(data,ws) {
 
 					userRegistry.register(new UserSession(displayName,roomName,ws, webRtcEndpoint));
 
-					
+					var participants = userRegistry.getParticipants(displayName,roomName); 
+					console.log("New Room: "+JSON.stringify(participants));
 					ws.send(JSON.stringify({
 						id:"existingParticipants",
-						data: userRegistry.getParticipants(displayName,roomName)
+						data: participants
 					}));
 
 				});
@@ -316,10 +317,10 @@ function joinRoom(data,ws) {
 			userRegistry.register(new UserSession(displayName,roomName,ws, webRtcEndpoint));
 
 			//broadcast new member to all
-			userRegistry.newParticipantArrived(displayName);
-
+			userRegistry.newParticipantArrived(displayName,roomName);
 			
 			var participants = userRegistry.getParticipants(displayName,roomName); 
+			console.log("Join Room: "+JSON.stringify(participants));
 			ws.send(JSON.stringify({
 				id:"existingParticipants",
 				data: participants
@@ -329,7 +330,6 @@ function joinRoom(data,ws) {
    }
    
 }
-
 
 function removeReceiver(id) {
 	if (!receivers[id]) {
