@@ -69,11 +69,12 @@ var WebSocketServer = wsm.Server, wss = new WebSocketServer({
 
 
 //Represents caller and callee sessions
-function UserSession(name, roomName, ws, endpoint){
+
+function UserSession(name, roomName, ws){
 	this.displayName = name;
 	this.ws = ws;
 	this.roomName = roomName;
-	this.webRtcEndpoint = endpoint;
+//	this.webRtcEndpoint = endpoint;
 }
 
 UserSession.prototype.sendMessage = function(message){
@@ -106,7 +107,8 @@ UserRegistry.prototype.newParticipantArrived = function(user,roomName){
 			var userSession = this.userInfo[key];
 			userSession.ws.send(JSON.stringify({
 				id: "newParticipantArrived",
-				name: user
+				name: user,
+                room: roomName
 			}));			
 		}
 	}
@@ -159,6 +161,14 @@ wss.on('connection', function(ws) {
 		case 'joinRoom': 
 				joinRoom(message,ws);
 			break;
+        
+        case 'inviteRoom':
+                inviteRoom(message, ws);
+            break;
+            
+        case 'inviteResponse':
+                inviteResponse(message, ws);
+            break;
 
 		case 'receiveVideoFrom': 
 				receiveVideoFrom(message,ws);
@@ -202,6 +212,42 @@ function leaveRoom(data,ws) {
 	userRegistry.participantLeft(displayName,roomName);
 
 
+}
+
+// Sends an invite message to the participants of
+// a certain room
+
+function inviteRoom(data, ws) {
+    var user = data.from;           
+    var roomName = data.room;
+    var participants = userRegistry.getParticipants(user,roomName);
+    participants.forEach(function(participant) {
+       var userInfo = userRegistry.userInfo[participant];
+       userInfo.ws.send(JSON.stringify({
+           id: 'incomingInvite',
+           from: user,
+           room: roomName
+       }));
+    });
+}
+
+// Sends a message back to the inviter whether
+// the participants accepted or rejected
+// the invite
+
+function inviteResponse(data, ws) {
+    var inviter = data.from;
+    var invitee = data.to;
+    var roomName = data.room;
+    var response = data.response;
+    var inviterInfo = userRegistry.userInfo[inviter];
+    
+    inviterInfo.ws.send(JSON.stringify({
+        id: 'inviteResponse',
+        response: response,
+        to: invitee,
+        room: roomName
+    }));
 }
 
 function receiveVideoFrom(data,ws) {
@@ -290,43 +336,49 @@ function joinRoom(data,ws) {
 
 			kurentoClient.create('MediaPipeline', function(error, pipeline) {
 
-
+                roomlist[roomName] = pipeline;
+                userRegistry.register(new UserSession(displayName,roomName,ws));
+                ws.send(JSON.stringify({
+					id:"joinResponse",
+                    response: "accepted",
+                    room: roomName
+				}));
 				//pipeline = _pipeline;
-				pipeline.create('WebRtcEndpoint', function(error, webRtcEndpoint) {
-
-					roomlist[roomName] = pipeline;				
-
-					userRegistry.register(new UserSession(displayName,roomName,ws, webRtcEndpoint));
-
-					var participants = userRegistry.getParticipants(displayName,roomName); 
-					console.log("New Room: "+JSON.stringify(participants));
-					ws.send(JSON.stringify({
-						id:"existingParticipants",
-						data: participants
-					}));
-
-				});
+//				pipeline.create('WebRtcEndpoint', function(error, webRtcEndpoint) {
+//
+//					roomlist[roomName] = pipeline;				
+//
+//					userRegistry.register(new UserSession(displayName,roomName,ws, webRtcEndpoint));
+//
+//					var participants = userRegistry.getParticipants(displayName,roomName); 
+//					console.log("New Room: "+JSON.stringify(participants));
+//					ws.send(JSON.stringify({
+//						id:"joinResponse",
+//                        response: "accepted",
+//                        room: roomName
+//					}));
+//
+//				});
 			});
 		});
-   }else{
+   } else {
    		// member
    	    var pipeline = roomlist[roomName];
+        
+        userRegistry.register(new UserSession(displayName,roomName,ws));
 
-		pipeline.create('WebRtcEndpoint', function(error, webRtcEndpoint) {
+		//broadcast new member to all
+		userRegistry.newParticipantArrived(displayName,roomName);
 			
-			userRegistry.register(new UserSession(displayName,roomName,ws, webRtcEndpoint));
-
-			//broadcast new member to all
-			userRegistry.newParticipantArrived(displayName,roomName);
-			
-			var participants = userRegistry.getParticipants(displayName,roomName); 
-			console.log("Join Room: "+JSON.stringify(participants));
-			ws.send(JSON.stringify({
-				id:"existingParticipants",
-				data: participants
-			}));
-
-		});
+		var participants = userRegistry.getParticipants(displayName,roomName); 
+        
+		console.log("Join Room: "+JSON.stringify(participants));
+        
+		ws.send(JSON.stringify({
+			id:"joinResponse",
+            response: "accepted",
+            room: roomName
+		}));
    }
    
 }
